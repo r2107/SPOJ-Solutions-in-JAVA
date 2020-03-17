@@ -1,0 +1,173 @@
+// Problem Link - > https://www.spoj.com/problems/GSS3/
+
+import java.io.*;
+import java.util.*;
+
+public class Main {
+	
+	// FOR FAST Input in JAVA
+	static class Reader {
+		final private int BUFFER_SIZE = 1 << 16;
+		private DataInputStream din;
+		private byte[] buffer;
+		private int bufferPointer, bytesRead;
+
+		public Reader() {
+			din = new DataInputStream(System.in);
+			buffer = new byte[BUFFER_SIZE];
+			bufferPointer = bytesRead = 0;
+		}
+
+		public Reader(String file_name) throws IOException {
+			din = new DataInputStream(new FileInputStream(file_name));
+			buffer = new byte[BUFFER_SIZE];
+			bufferPointer = bytesRead = 0;
+		}
+
+		public String next() throws IOException {
+			byte[] buf = new byte[64]; // line length
+			int cnt = 0, c;
+			while ((c = read()) != -1) {
+				if (c == ' ')
+					break;
+				buf[cnt++] = (byte) c;
+			}
+			return new String(buf, 0, cnt);
+		}
+
+		public int nextInt() throws IOException {
+			int ret = 0;
+			byte c = read();
+			while (c <= ' ')
+				c = read();
+			boolean neg = (c == '-');
+			if (neg)
+				c = read();
+			do {
+				ret = ret * 10 + c - '0';
+			} while ((c = read()) >= '0' && c <= '9');
+
+			if (neg)
+				return -ret;
+			return ret;
+		}
+
+		private void fillBuffer() throws IOException {
+			bytesRead = din.read(buffer, bufferPointer = 0, BUFFER_SIZE);
+			if (bytesRead == -1)
+				buffer[0] = -1;
+		}
+
+		private byte read() throws IOException {
+			if (bufferPointer == bytesRead)
+				fillBuffer();
+			return buffer[bufferPointer++];
+		}
+
+		public void close() throws IOException {
+			if (din == null)
+				return;
+			din.close();
+		}
+	}
+
+	static int min = Integer.MIN_VALUE;
+	public static void main(String[] args) throws Exception {
+		Reader s = new Reader();
+		int n = s.nextInt();
+		int arr[] = new int[n];
+		for(int i = 0; i < n; i++) {
+			arr[i] = s.nextInt();
+		}
+		// For FAST Output in JAVA
+		StringBuffer sb = new StringBuffer();
+		T tree[] = new T[4 * n];
+		int q = s.nextInt();
+		build(tree, arr, 0, 0, n - 1);
+		while(q-- > 0) {
+			int typ = s.nextInt();
+			int x = s.nextInt();
+			int y = s.nextInt();
+			if(typ == 1) {
+				sb.append(query(tree, arr, 0, 0, n - 1, x - 1, y - 1).mx + "\n");
+			}
+			else {
+				update(tree, arr, 0, 0, n - 1, x - 1, y);
+			}
+		}
+		System.out.println(sb);
+	}
+
+	/*
+	 * tree  -> segment tree.
+	 * arr -> original array to update for update query.
+	 * id   -> to track the index of current node of trees in the array.
+	 * snode -> starting index of the tree node that stores information of our array.
+	 * enode -> ending index of tree node to that sores information of our array.
+	 * i -> index of our update query.
+	 * val   -> value at index to update in array.
+	 */
+	private static void update(T[] tree, int[] arr, int id, int snode, int enode, int i, int val) {
+		if(snode > enode) return;
+		if(snode == enode) {
+			arr[i] = val;
+			tree[id] = new T(arr[i], arr[i], arr[i], arr[i]);
+			return;
+		}
+		int mid = (snode + enode) / 2;
+		if(i <= mid)
+			update(tree, arr, 2 * id + 1, snode, mid, i, val);
+		else 
+			update(tree, arr, 2 * id + 2, mid + 1, enode, i, val);
+		T l = tree[2 * id + 1];
+		T r = tree[2 * id + 2];
+		T ans = new T(l.tot + r.tot, max(l.r + r.l, l.mx, r.mx), max(l.tot + r.l, l.l), max(r.tot + l.r, r.r));
+		tree[id] = ans;
+	}
+
+	private static T query(T[] tree, int[] arr, int id, int snode, int enode, int st, int e) {
+		if(snode > enode) return new T(min, min, min, min);
+		if(snode > e || enode < st) return new T(min, min, min, min);
+		if(st <= snode && e >= enode) {
+			return tree[id];
+		}
+		int mid = (snode + enode) / 2;
+		T l = query(tree, arr, 2 * id + 1, snode, mid, st, e);
+		T r = query(tree, arr, 2 * id + 2, mid + 1, enode, st, e);
+		if(l.tot == min) return r;
+		if(r.tot == min) return l;
+		T ans = new T(l.tot + r.tot, max(l.r + r.l, l.mx, r.mx), max(l.tot + r.l, l.l), max(r.tot + l.r, r.r));
+		return ans;
+	}
+
+	private static void build(T[] tree, int[] arr, int id, int st, int e) {
+		if(st > e) return;
+		if(st == e) {
+			tree[id] = new T(arr[st], arr[st], arr[st], arr[st]);
+			return;
+		}
+		int mid = (st + e) / 2;
+		build(tree, arr, 2 * id + 1, st, mid);
+		build(tree, arr, 2 * id + 2, mid + 1, e);
+		T l = tree[2 * id + 1];
+		T r = tree[2 * id + 2];
+		T ans = new T(l.tot + r.tot, max(l.r + r.l, l.mx, r.mx), max(l.tot + r.l, l.l), max(r.tot + l.r, r.r));
+		tree[id] = ans;
+	}
+
+	// finding the maximum of a list of numbers passed as arguements
+	private static int max(int ...a) {
+		int max = Integer.MIN_VALUE;
+		for(int i : a) {
+			max = Math.max(i, max);
+		}
+		return max;
+	}
+	
+}
+class T{
+	int tot, mx, l, r;
+	T(int ... a){
+		tot = a[0]; mx = a[1]; l = a[2]; r = a[3];
+	}
+}
