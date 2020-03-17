@@ -1,7 +1,8 @@
 import java.io.*;
-// Problem Link ->  https://www.spoj.com/problems/IOPC1207/
-// Problem Link ->  https://www.codechef.com/problems/IOPC1207
-// Solution Link -> https://www.codechef.com/viewsolution/30477124
+// Problem Link ->     https://www.spoj.com/problems/IOPC1207/
+// Problem Link ->     https://www.codechef.com/problems/IOPC1207
+// Solution Link ->    https://www.codechef.com/viewsolution/30477124
+// Codechef Profile -> https://www.codechef.com/users/rahul_107
 // Accepted on SPOJ & Codechef both
 
 public class Main {
